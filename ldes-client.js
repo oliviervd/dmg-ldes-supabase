@@ -8,42 +8,36 @@ import {
 } from "./utils/ldes_harvester.js";
 
 import cron from "node-cron";
+import logger from "./utils/logger.js";
 
 function main() {
-  console.log("----------------------------------------------------------");
-  console.log("             start sync LDES-postGres                     ");
-  console.log("                                                          ");
-  console.log("----------------------------------------------------------");
+  logger.info("----------------------------------------------------------");
+  logger.info("                 start sync LDES-postGres                 ");
+  logger.info("----------------------------------------------------------");
 
   try {
-    console.log("fetching human made objects");
-    fetchObjectLDES();
+    logger.info("fetching human made objects");
+    fetchObjectLDES()
 
-    console.log("fetching thesaurus");
+    logger.info("fetching thesaurus");
     fetchThesaurusLDES();
 
-    console.log("fetching exhibition");
+    logger.info("fetching exhibition");
     fetchExhibitionLDES();
 
-    console.log("fetching agents");
+    logger.info("fetching agents");
     fetchPersonenLDES();
 
     fetchArchiveLDES();
-    console.log("done harvesting LDES");
+    logger.info("done harvesting LDES");
 
     fetchPrivateObjectsLDES();
-    console.log("done fetching private objects");
-  } catch (e) {
-    console.log(e);
-  }
+    logger.info("done fetching private objects");
 
-  console.log("----------------------------------------------------------");
-  console.log("             finished sync LDES-postGres                  ");
-  console.log("                                                          ");
-  console.log("----------------------------------------------------------");
+
+  } catch (e) {
+    logger.error(e);
+  }
 }
 
-// run this script every day at 23:00
-cron.schedule("0 23 * * *", () => {
-  main();
-});
+main()

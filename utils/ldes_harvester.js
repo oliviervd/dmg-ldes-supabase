@@ -1,12 +1,13 @@
 import { EventStream, newEngine } from "@treecg/actor-init-ldes-client";
 import { supabase } from "./supabaseClient.js";
+import logger from "./logger.js";
 
 // calculation of yesterday's date
 // create a date object using Date constructor
 var dateObj = new Date();
 var fetchFromStart = new Date();
 // subtract one day from current time
-dateObj.setDate(dateObj.getDate() - 5);
+dateObj.setDate(dateObj.getDate() - 10);
 fetchFromStart.setDate(dateObj.getDate() - 2000);
 
 export function fetchPrivateObjectsLDES() {
@@ -93,15 +94,15 @@ export function fetchPrivateObjectsLDES() {
               .select("*")
               .eq("objectNumber", ObjectNumber));
           } catch (e) {
-            console.error(e);
+            logger.error(e);
           }
 
           // if not: insert member as a new object
           // based on length of array (if 0 = empty)
           if (data && Array.isArray(data) && data.length == 0) {
-            console.log("*-----------------------------------*");
-            console.log("checking: ", ObjectNumber, data.length);
-            console.log("there is no data for: ", _id);
+            logger.info("*-----------------------------------*");
+            logger.info("checking: ", ObjectNumber, data.length);
+            logger.info("there is no data for: ", _id);
 
             let insertError;
 
@@ -115,17 +116,17 @@ export function fetchPrivateObjectsLDES() {
                   is_version_of: _id,
                 }));
             } catch (insertError) {
-              console.error(insertError);
+              logger.error(insertError);
             }
 
-            console.log("data added");
-            console.log("*----------------------------------*");
+            logger.info("data added");
+            logger.info("*----------------------------------*");
 
             // if it does: update member data;
           } else if (data && Array.isArray(data) && data.length > 0) {
-            console.log("*----------------------------------*");
-            console.log("updating: ", ObjectNumber);
-            console.log("*----------------------------------*");
+            logger.info("*----------------------------------*");
+            logger.info("updating: ", ObjectNumber);
+            logger.info("*----------------------------------*");
 
             let { data, error } = await supabase
               .from("dmg_private_objects_LDES")
@@ -238,17 +239,17 @@ export function fetchObjectLDES() {
               .from("dmg_objects_LDES")
               .select("*")
               .eq("objectNumber", _objectNumber));
-            //console.log(data);
+            //logger.info(data);
           } catch (err) {
             error = err;
-            console.log("error: ", error);
+            logger.info("error: ", error);
           }
 
           // if not insert new row in supabase
           if (data && Array.isArray(data) && data.length == 0) {
-            console.log("*-----------------------------------*");
-            console.log("checking: ", _objectNumber, data.length);
-            console.log("there is no data for: ", _id);
+            logger.info("*-----------------------------------*");
+            logger.info("checking: ", _objectNumber, data.length);
+            logger.info("there is no data for: ", _id);
 
             let insertError;
 
@@ -266,14 +267,14 @@ export function fetchObjectLDES() {
               console.error("Insert operation failed:", err);
             }
 
-            console.log("data added");
-            console.log("*----------------------------------*");
+            logger.info("data added");
+            logger.info("*----------------------------------*");
 
             // if version of the object alread exists, update some values.
           } else if (data && Array.isArray(data) && data.length > 0) {
-            console.log("*----------------------------------*");
-            console.log("updating: ", _objectNumber);
-            console.log("*----------------------------------*");
+            logger.info("*----------------------------------*");
+            logger.info("updating: ", _objectNumber);
+            logger.info("*----------------------------------*");
 
             let { data, error } = await supabase
               .from("dmg_objects_LDES")
@@ -292,21 +293,21 @@ export function fetchObjectLDES() {
       //eventstreamSync.pause(3000); // pause for 3 seconds
     });
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata); // console.log(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      if (metadata.treeMetadata); // logger.info(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
     });
     eventstreamSync.on("pause", () => {
       // Export current state, but only when paused!
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      //console.log("No more data!");
+      //logger.info("No more data!");
     });
     return ldes_harvest;
-    //console.log(ldes_harvest);
+    //logger.info(ldes_harvest);
   } catch (e) {
     console.error(e);
   }
-  //console.log(ldes_harvest.length)
+  //logger.info(ldes_harvest.length)
 }
 
 export function fetchObjectLDES_OSLO() {
@@ -377,13 +378,12 @@ export function fetchObjectLDES_OSLO() {
       if (options.representation) {
         if (options.representation === "Object") {
           const memberURI = member.id;
-          //console.log(memberURI);
+          //logger.info(memberURI);
           const object = member.object;
-          //console.log(object);
-          //console.log(member);
+          //logger.info(object);
+          //logger.info(member);
           ldes_harvest.push(member);
-          console.log(ldes_harvest.length);
-          //console.log(member["object"]['Stuk.identificator'][1]['skos:notation']['@value'])
+          //logger.info(member["object"]['Stuk.identificator'][1]['skos:notation']['@value'])
 
           let { data, error } = await supabase
             .from("dmg_objects_LDES")
@@ -404,34 +404,34 @@ export function fetchObjectLDES_OSLO() {
                         }
                     */
           const memberURI = member.id.value;
-          //console.log(memberURI);
+          //logger.info(memberURI);
           const quads = member.quads;
-          //console.log(quads);
+          //logger.info(quads);
         }
       } else {
-        //console.log(member);
+        //logger.info(member);
       }
 
       // Want to pause event stream?
       //eventstreamSync.pause();
     });
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata) console.log(metadata.treeMetadata); // follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
-      //console.log(metadata.url); // page from where metadata has been extracted
+      if (metadata.treeMetadata) logger.info(metadata.treeMetadata); // follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      //logger.info(metadata.url); // page from where metadata has been extracted
     });
     eventstreamSync.on("pause", () => {
       // Export current state, but only when paused!
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      console.log("No more data!");
+      logger.info("No more data!");
     });
     return ldes_harvest;
-    console.log(ldes_harvest);
+    logger.info(ldes_harvest);
   } catch (e) {
     console.error(e);
   }
-  //console.log(ldes_harvest.length)
+  //logger.info(ldes_harvest.length)
 }
 
 export function fetchThesaurusLDES() {
@@ -482,8 +482,7 @@ export function fetchThesaurusLDES() {
           const object = member.object;
 
           ldes_harvest.push(member);
-          console.log(ldes_harvest.length);
-          //console.log(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
+          logger.info(member["object"]["skos:prefLabel"]["@value"])
 
           let _id =
             member["object"]["http://purl.org/dc/terms/isVersionOf"][
@@ -491,12 +490,13 @@ export function fetchThesaurusLDES() {
             ].split("/");
 
           // check if member is part of thesaurus DMG (priref starts with 53)
-          //console.log('GENERATED AT TIME:' + member["object"]["@id"].split("/")[6])
-          //console.log(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
-          //console.log(member)
+          //logger.info('GENERATED AT TIME:' + member["object"]["@id"].split("/")[6])
+          //logger.info(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
+          //logger.info(member)
 
           if (_id[5].startsWith("53")) {
-            console.log(_id);
+            logger.info(_id);
+            //logger.info(member);
             // check if object in DB;
             let { data, error } = await supabase
               .from("dmg_thesaurus_LDES")
@@ -507,13 +507,13 @@ export function fetchThesaurusLDES() {
               );
 
             if (data != "") {
-              console.log(
+              logger.info(
                 "there is data for: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
                   ],
               );
-              console.log(
+              logger.info(
                 "updating: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -525,6 +525,7 @@ export function fetchThesaurusLDES() {
                   {
                     LDES_raw: member,
                     generated_at_time: member["object"]["prov:generatedAtTime"],
+                    //concept: member["skos:prefLabel"]
                   },
                 ])
                 .eq(
@@ -534,13 +535,13 @@ export function fetchThesaurusLDES() {
                   ],
                 );
             } else {
-              console.log(
+              logger.info(
                 "there is no data for: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
                   ],
               );
-              console.log(
+              logger.info(
                 "inserting: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -579,21 +580,21 @@ export function fetchThesaurusLDES() {
       //eventstreamSync.pause();
     });
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata); // console.log(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      if (metadata.treeMetadata); // logger.info(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
     });
     eventstreamSync.on("pause", () => {
       // Export current state, but only when paused!
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      console.log("No more data!");
+      logger.info("No more data!");
     });
     return ldes_harvest;
-    //console.log(ldes_harvest);
+    //logger.info(ldes_harvest);
   } catch (e) {
     console.error(e);
   }
-  //console.log(ldes_harvest.length)
+  //logger.info(ldes_harvest.length)
 }
 
 export function fetchPersonenLDES() {
@@ -643,9 +644,8 @@ export function fetchPersonenLDES() {
           const memberURI = member.id;
           const object = member.object;
 
-          ldes_harvest.push(member);
-          console.log(ldes_harvest.length);
-          //console.log(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
+          ldes_harvest.push(member);;
+          //logger.info(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
 
           let _id =
             member["object"]["http://purl.org/dc/terms/isVersionOf"][
@@ -653,12 +653,12 @@ export function fetchPersonenLDES() {
             ].split("/");
 
           // check if member is part of thesaurus DMG (priref starts with 53)
-          //console.log('GENERATED AT TIME:' + member["object"]["@id"].split("/")[6])
-          //console.log(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
-          //console.log(member)
+          //logger.info('GENERATED AT TIME:' + member["object"]["@id"].split("/")[6])
+          //logger.info(member["object"]["http://purl.org/dc/terms/isVersionOf"]["@id"])
+          //logger.info(member)
 
           if (_id[5].startsWith("53")) {
-            console.log(_id);
+            logger.info(_id);
             // check if object in DB;
             let { data, error } = await supabase
               .from("dmg_personen_LDES")
@@ -669,13 +669,13 @@ export function fetchPersonenLDES() {
               );
 
             if (data != "") {
-              console.log(
+              logger.info(
                 "there is data for: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
                   ],
               );
-              console.log(
+              logger.info(
                 "updating: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -696,14 +696,14 @@ export function fetchPersonenLDES() {
                   ],
                 );
             } else {
-              console.log(
+              logger.info(
                 "there is no data for: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
                   ],
               );
               try {
-                console.log(
+                logger.info(
                   "inserting: " +
                     member["object"]["http://purl.org/dc/terms/isVersionOf"][
                       "@id"
@@ -728,7 +728,7 @@ export function fetchPersonenLDES() {
                     },
                   ]);
               } catch (e) {
-                console.log(e);
+                logger.info(e);
               }
             }
           }
@@ -749,21 +749,21 @@ export function fetchPersonenLDES() {
       //eventstreamSync.pause();
     });
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata); // console.log(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      if (metadata.treeMetadata); // logger.info(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
     });
     eventstreamSync.on("pause", () => {
       // Export current state, but only when paused!
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      console.log("No more data!");
+      logger.info("No more data!");
     });
     return ldes_harvest;
-    //console.log(ldes_harvest);
+    //logger.info(ldes_harvest);
   } catch (e) {
     console.error(e);
   }
-  //console.log(ldes_harvest.length)
+  //logger.info(ldes_harvest.length)
 }
 
 export function fetchExhibitionLDES() {
@@ -823,7 +823,6 @@ export function fetchExhibitionLDES() {
             const memberURI = member.id;
             const object = member.object;
             ldes_harvest.push(member);
-            console.log(ldes_harvest.length);
 
             // check if object in DB;
             let { data, error } = await supabase
@@ -835,7 +834,7 @@ export function fetchExhibitionLDES() {
               );
 
             if (data != "") {
-              console.log(
+              logger.info(
                 "updating: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -856,7 +855,7 @@ export function fetchExhibitionLDES() {
                   ],
                 );
             } else {
-              console.log(
+              logger.info(
                 "inserting: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -887,17 +886,17 @@ export function fetchExhibitionLDES() {
         }
       });
     } catch (e) {
-      console.log(e);
+      logger.info(e);
     }
 
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata); // console.log(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      if (metadata.treeMetadata); // logger.info(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
     });
     eventstreamSync.on("pause", () => {
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      console.log("No more data!");
+      logger.info("No more data!");
     });
     return ldes_harvest;
   } catch (e) {
@@ -962,7 +961,6 @@ export function fetchArchiveLDES() {
             const memberURI = member.id;
             const object = member.object;
             ldes_harvest.push(member);
-            console.log(ldes_harvest.length);
 
             // load image API from manifest
 
@@ -976,7 +974,7 @@ export function fetchArchiveLDES() {
               );
 
             if (data !== []) {
-              console.log(
+              logger.info(
                 "updating: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -1011,7 +1009,7 @@ export function fetchArchiveLDES() {
 
               let imageAPI = await load();
 
-              console.log(
+              logger.info(
                 "inserting: " +
                   member["object"]["http://purl.org/dc/terms/isVersionOf"][
                     "@id"
@@ -1042,17 +1040,17 @@ export function fetchArchiveLDES() {
         }
       });
     } catch (e) {
-      console.log(e);
+      logger.info(e);
     }
 
     eventstreamSync.on("metadata", (metadata) => {
-      if (metadata.treeMetadata); // console.log(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
+      if (metadata.treeMetadata); // logger.info(metadata.treeMetadata) follows the structure of the TREE metadata extractor (https://github.com/TREEcg/tree-metadata-extraction#extracted-metadata)
     });
     eventstreamSync.on("pause", () => {
       let state = eventstreamSync.exportState();
     });
     eventstreamSync.on("end", () => {
-      console.log("No more data!");
+      logger.info("No more data!");
     });
     return ldes_harvest;
   } catch (e) {
