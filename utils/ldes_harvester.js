@@ -7,7 +7,7 @@ import logger from "./logger.js";
 var dateObj = new Date();
 var fetchFromStart = new Date();
 // subtract one day from current time
-dateObj.setDate(dateObj.getDate() - 10);
+dateObj.setDate(dateObj.getDate() - 2);
 fetchFromStart.setDate(dateObj.getDate() - 2000);
 
 export function fetchPrivateObjectsLDES() {
